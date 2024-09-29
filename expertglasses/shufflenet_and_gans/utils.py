@@ -6,13 +6,13 @@
 #'''
 import os
 import numpy as np
-from tensorflow.keras import backend as K
+from tensorflow.python.keras import backend as K
 from keras_applications.imagenet_utils import _obtain_input_shape
-from tensorflow.keras.models import Model
-from tensorflow.keras.utils import get_source_inputs
-from tensorflow.keras.layers import Activation, Add, Concatenate, Conv2D, GlobalMaxPooling2D
-from tensorflow.keras.layers import GlobalAveragePooling2D, Input, Dense
-from tensorflow.keras.layers import MaxPool2D,AveragePooling2D, BatchNormalization, Lambda, DepthwiseConv2D
+from tensorflow.python.keras.models import Model
+from tensorflow.python.keras.utils import get_source_inputs
+from tensorflow.python.keras.layers import Activation, Add, Concatenate, Conv2D, GlobalMaxPooling2D
+from tensorflow.python.keras.layers import GlobalAveragePooling2D, Input, Dense
+from tensorflow.python.keras.layers import MaxPool2D,AveragePooling2D, BatchNormalization, Lambda, DepthwiseConv2D
 
 
 def channel_split(x, name=''):

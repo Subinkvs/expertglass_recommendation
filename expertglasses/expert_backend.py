@@ -75,7 +75,7 @@ Todo:
    https://github.com/Defasium/expertglasses
 
 '''
-
+from typing import Tuple
 import base64
 import json
 import os
@@ -281,7 +281,7 @@ class ExpertEyeglassesRecommender:
         '''Saving cached results to the disk'''
         joblib.dump(self._cache, os.path.join(self._prefix, 'utils/cached.gz'), 3, 4)
 
-    def __get_vecs(self) -> (np.ndarray, np.ndarray):
+    def __get_vecs(self) -> Tuple[np.ndarray, np.ndarray]:
         '''Get eyeglasses vectors for the current image file. In case there are no
         calculated vectors, make a call to an expert module
 

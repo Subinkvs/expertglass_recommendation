@@ -5,13 +5,13 @@
 # @Author: Greg Gao(laygin)
 #'''
 import numpy as np
-from tensorflow.keras import backend as K
-from tensorflow.keras.utils import plot_model
+from tensorflow.python.keras import backend as K
+from tensorflow.python.keras.utils import plot_model
 from keras_applications.imagenet_utils import _obtain_input_shape
-from tensorflow.keras.utils import get_source_inputs
-from tensorflow.keras.layers import Input, Conv2D, MaxPool2D, GlobalMaxPooling2D, GlobalAveragePooling2D
-from tensorflow.keras.layers import Activation, Dense
-from tensorflow.keras.models import Model
+from tensorflow.python.keras.utils import get_source_inputs
+from tensorflow.python.keras.layers import Input, Conv2D, MaxPool2D, GlobalMaxPooling2D, GlobalAveragePooling2D
+from tensorflow.python.keras.layers import Activation, Dense
+from tensorflow.python.keras.models import Model
 from shufflenet_and_gans.utils import block
 
 
