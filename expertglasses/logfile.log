@@ -2380,3 +2380,78 @@ Sex:
 2024-09-29 10:28:16,290 - __main__ - DEBUG - Triggered face event: None
 2024-09-29 10:28:16,290 - __main__ - INFO - New face vector: None
 2024-09-29 10:28:16,290 - __main__ - ERROR - An error occured while extracting/editing a facevector: 'NoneType' object has no attribute 'items'
+2024-09-29 20:12:23,124 - __main__ - INFO - Image: C:/Users/USER/Downloads/face_female1.jpg
+2024-09-29 20:12:23,342 - __main__ - INFO - Getting face vector...
+2024-09-29 20:12:23,347 - __main__ - INFO - Getting face vector...
+2024-09-29 20:12:23,348 - __main__ - INFO - Getting face vector...
+2024-09-29 20:12:23,349 - __main__ - INFO - Getting face vector...
+2024-09-29 20:12:23,350 - __main__ - INFO - Getting face vector...
+2024-09-29 20:12:23,351 - __main__ - INFO - Updating new image...
+2024-09-29 20:12:23,534 - __main__ - INFO - Extracting features...
+2024-09-29 20:12:43,970 - __main__ - INFO - Cropping eyes...
+2024-09-29 20:12:43,986 - __main__ - INFO - Cropping face...
+2024-09-29 20:12:44,030 - __main__ - INFO - Loading model: eye_color_plus_aug_best_auc_64x64x3_3.h5
+2024-09-29 20:12:50,866 - __main__ - INFO - Loading model: faceshapemod_aug_best_auc_128x128x1_7.h5
+2024-09-29 20:12:57,777 - __main__ - INFO - Loading model: forehead_aug_5_128x128x1_3.h5
+2024-09-29 20:13:04,728 - __main__ - INFO - Loading model: jawtypemod_aug_best_auc_128x128x1_3.h5
+2024-09-29 20:13:12,405 - __main__ - INFO - Loading model: skintone_aug_best_auc_128x128x3_3.h5
+2024-09-29 20:13:20,210 - __main__ - INFO - Loading model: conditional gan
+2024-09-29 20:13:23,287 - __main__ - INFO - Loading model: super resolution gan
+2024-09-29 20:13:32,478 - __main__ - INFO - Getting face vector...
+2024-09-29 20:13:37,715 - __main__ - DEBUG - Image convertion code: 1
+2024-09-29 20:13:58,484 - __main__ - DEBUG - Image convertion code: 1
+2024-09-29 20:14:40,818 - __main__ - INFO - Getting face vector...
+2024-09-29 20:14:40,818 - __main__ - INFO - Extracted face vector: {'faceshape': [(0.358974358974359, 'oval'), (0.20512820512820512, 'round'), (0.1794871794871795, 'heart'), (0.10256410256410256, 'diamond'), (0.07692307692307693, 'square'), (0.05128205128205128, 'triangle'), (0.02564102564102564, 'oblong')], 'ratio': 'longer', 'jawtype': 'defined', 'beard': 'no', 'doublechin': 'no', 'highcheeckbones': 'yes', 'chubby': 'no', 'eyebrows_thickness': 'thin', 'eyebrows_shape': 'flat', 'nose_size': 'big', 'eyes_narrow': 'yes', 'eyes_iris': 'brown', 'forehead': 'notbig', 'bangs': 'no', 'lips': 'normal', 'mustache': 'no', 'bald': 'no', 'hair': 'black', 'skintone': 'warm', 'race': 'white', 'paleskin': 'yes', 'gender': 'female'}
+2024-09-29 20:14:43,329 - __main__ - DEBUG - Triggered face event: None
+2024-09-29 20:14:43,329 - __main__ - INFO - New face vector: None
+2024-09-29 20:14:43,329 - __main__ - ERROR - An error occured while extracting/editing a facevector: 'NoneType' object has no attribute 'items'
+2024-09-29 20:14:48,123 - __main__ - INFO - Explanation of expert system: Face shape:
+	Oval by 35.9%
+		Thin frames are not the best choice (make you look wider), basically all frames are good. It is worth paying attention to the frames of square shape, rectangular, aviators. It is better to avoid frames that are too large or too small. Rim and semi-rim frames are a good choice for a long face. Any color suits you.
+	Round by 20.5%
+		It is worth paying attention to the cat-eye frames, rectangular, square and angular in generall. It is better to avoid round, oval, not elongated and thick frames. Consider the option of rim and semi-rim models. Suitable shades of brown and black. And try frames with prints.
+	Heart by 17.9%
+		You have a pointed chin. For harmony, it is better to choose bottom-heavy frames. Experiment with the retro style. You should pay attention to the oval, clubmaster, aviators frames. It is better to avoid narrowing and very thin models. Light, light colors, shades of brown will suit you.
+	Diamond by 10.3%
+		This face shape is rare and balanced. To emphasize certain features, consider cat-eye frames, clubmasters, and oval frames. It is better to avoid frames that are too large or too small. It is better to avoid bottom-heavy models. Consider the option of metal semi-rim frames. Shades of brown and black will suit you. And try frames with a dark top.
+	Square by 7.7%
+		It is worth paying attention to the frames of round, oval shape, and smoothed curves. It is better to avoid square and rectangular frames, which attract attention to the jaw. Consider the option of wide plastic frames. Experiment with colors, try bright prints.
+	Triangle by 5.1%
+		It is worth paying attention to the cat-eye frames, Clubmasters, round. Thin metal or plastic frames will suit you. It's better to avoid frames with dark shades. Light colors will suit you. Also consider the option of transparent plastic frames.
+Face ratio:
+	Longer
+		Frames that are elongated in height will suit you.
+Jaw shape:
+	Defined
+		Soft curved frames will be the best choice.
+Eyebrows:
+	Thin
+		Thick frames will highlight the eye area.
+	Flat line
+		The shape of the upper part of the frame should follow the line of the eyebrows.
+Nose size:
+	Large
+		Thick frames will help shift attention from a large nose. The absence of nosepads will play in favor.
+Eyes:
+	Narrow eye section:
+		For a narrow cut of the eyes, it is better to choose large, not too thick frames. Dark shades are not the best choice.
+	Hazel/Brown
+		Suitable models has brown, blue, dark green, and light shades. Also consider the option of transparent plastic frames.
+Forehead:
+	Small or is hidden behind the bangs
+		Consider examining not very thick frames.
+Lips:
+	Normal
+		Consider examining not very thick frames.
+Hair:
+	Black
+		Metal frames with dark and shiny shades. Also consider the option of transparent plastic frames.
+Skin tone:
+	Warm
+		Warm colors and frames with gold will suit you
+	Pale
+		A great idea would be to use contrast tones to your skin: black, brown models. Also consider the option of transparent plastic frames. Rimless frames are not the best choice. They will make you look older.
+Sex:
+	Female
+		According to the research, women prefer fullrim plastic glasses.
+
