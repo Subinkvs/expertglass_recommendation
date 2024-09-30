@@ -11,6 +11,8 @@ sys.path.append(main_directory_path)
 
 from expertglasses.expert_backend import ExpertEyeglassesRecommender  # Import your expert class
 from rest_framework import status
+from django.http import FileResponse
+
 
 # Directory to temporarily save uploaded images
 UPLOAD_DIR = os.path.join(settings.MEDIA_ROOT, "uploaded_images")
@@ -43,6 +45,7 @@ def upload_image(request):
     
     return Response({"message": "Image uploaded successfully"}, status=status.HTTP_200_OK)
 
+
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
 def generate_unique_image(request):
@@ -51,19 +54,30 @@ def generate_unique_image(request):
     
     file = request.FILES['file']
     lang = request.data.get('lang', 'en')
-    show = request.data.get('show', True)
-    
+    show = request.data.get('show', 'true').lower() == 'true'  # Ensure 'show' is handled as a boolean
+
     # Save image temporarily
     img_path = save_uploaded_file(file)
 
     # Initialize recommender and generate unique image
     try:
         recommender = ExpertEyeglassesRecommender(img_path, lang=lang)
-        image = recommender.plot_recommendations(strategy='factorized')
+        generated_image_path = recommender.plot_recommendations(show=show)  # Generate the image
+
+        # Ensure the generated image exists
+        if not os.path.exists(generated_image_path):
+            return Response({"error": "Generated image not found."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-    return Response({"message": "Unique eyeglass frame generated", "unique_image": image}, status=status.HTTP_200_OK)
+    # Return the image as a file response
+    try:
+        response = FileResponse(open(generated_image_path, 'rb'), content_type='image/jpeg')
+        response['Content-Disposition'] = 'inline; filename="unique_eyeglass_frame.jpg"'  # Display in Postman
+        return response
+    except Exception as e:
+        return Response({"error": f"Error serving image: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
@@ -93,7 +107,7 @@ def get_explanation(request):
         return Response({"error": "No file provided."}, status=status.HTTP_400_BAD_REQUEST)
     
     file = request.FILES['file']
-    lang = request.data.get('lang', 'en')
+    lang = request.data.get('lang','en')
     
     # Save uploaded image
     img_path = save_uploaded_file(file)
@@ -102,7 +116,7 @@ def get_explanation(request):
 
     # Initialize recommender and get explanation
     try:
-        recommender = ExpertEyeglassesRecommender(img_path)
+        recommender = ExpertEyeglassesRecommender(img_path, lang=lang)
         description = recommender.description
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
