@@ -27,7 +27,7 @@ Todo:
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.layers import Lambda, Dense, Dropout
-from shufflenet_and_gans.shufflenetv2 import ShuffleNetV2
+from expertglasses.shufflenet_and_gans.shufflenetv2 import ShuffleNetV2
 
 
 def build_network(input_shape, embedding_size):

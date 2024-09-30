@@ -5,12 +5,11 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import MultiPartParser
 from django.conf import settings
-
 # Add the main directory to sys.path
 main_directory_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))
 sys.path.append(main_directory_path)
 
-from expert_backend import ExpertEyeglassesRecommender  # Import your expert class
+from expertglasses.expert_backend import ExpertEyeglassesRecommender  # Import your expert class
 from rest_framework import status
 
 # Directory to temporarily save uploaded images
@@ -60,11 +59,11 @@ def generate_unique_image(request):
     # Initialize recommender and generate unique image
     try:
         recommender = ExpertEyeglassesRecommender(img_path, lang=lang)
-        unique_image = recommender.generate_unique(show=show)
+        image = recommender.plot_recommendations(strategy='factorized')
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-    return Response({"message": "Unique eyeglass frame generated", "unique_image": unique_image}, status=status.HTTP_200_OK)
+    return Response({"message": "Unique eyeglass frame generated", "unique_image": image}, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
@@ -89,15 +88,21 @@ def extract_facial_features(request):
 
 @api_view(['GET'])
 def get_explanation(request):
-    img_path = request.query_params.get('img_path')
-    lang = request.query_params.get('lang', 'en')
     
+    if 'file' not in request.FILES:
+        return Response({"error": "No file provided."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    file = request.FILES['file']
+    lang = request.data.get('lang', 'en')
+    
+    # Save uploaded image
+    img_path = save_uploaded_file(file)
     if not img_path or not os.path.exists(img_path):
         return Response({"error": "Image path not provided or does not exist."}, status=status.HTTP_400_BAD_REQUEST)
 
     # Initialize recommender and get explanation
     try:
-        recommender = ExpertEyeglassesRecommender(img_path, lang=lang)
+        recommender = ExpertEyeglassesRecommender(img_path)
         description = recommender.description
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

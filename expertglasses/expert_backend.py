@@ -91,11 +91,11 @@ import requests
 import tensorflow as tf
 from skimage import io
 
-from faceplusplus import extract_features, rotate_image
-from expert_and_explanation import translate_facevec2eyeglassesvec as map_face2glass
-from model_architecture import build_network
-from shufflenet_and_gans.common import resolve_single
-from shufflenet_and_gans.srgan import generator
+from expertglasses.faceplusplus import extract_features, rotate_image
+from expertglasses.expert_and_explanation import translate_facevec2eyeglassesvec as map_face2glass
+from expertglasses.model_architecture import build_network
+from expertglasses.shufflenet_and_gans.common import resolve_single
+from expertglasses.shufflenet_and_gans.srgan import generator
 
 VERSION = __version__ = '0.2.5 Released 27-August-2020'
 
