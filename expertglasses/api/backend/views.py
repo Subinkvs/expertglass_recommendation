@@ -14,6 +14,8 @@ from rest_framework import status
 from django.http import FileResponse
 
 
+
+
 # Directory to temporarily save uploaded images
 UPLOAD_DIR = os.path.join(settings.MEDIA_ROOT, "uploaded_images")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -45,7 +47,6 @@ def upload_image(request):
     
     return Response({"message": "Image uploaded successfully"}, status=status.HTTP_200_OK)
 
-
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
 def generate_unique_image(request):
@@ -54,30 +55,17 @@ def generate_unique_image(request):
     
     file = request.FILES['file']
     lang = request.data.get('lang', 'en')
-    show = request.data.get('show', 'true').lower() == 'true'  # Ensure 'show' is handled as a boolean
-
-    # Save image temporarily
     img_path = save_uploaded_file(file)
 
-    # Initialize recommender and generate unique image
     try:
-        recommender = ExpertEyeglassesRecommender(img_path, lang=lang)
-        generated_image_path = recommender.plot_recommendations(show=show)  # Generate the image
-
-        # Ensure the generated image exists
-        if not os.path.exists(generated_image_path):
-            return Response({"error": "Generated image not found."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-    # Return the image as a file response
-    try:
+        ins = ExpertEyeglassesRecommender(img_path, lang=lang)
+        generated_image_path = ins.plot_recommendations()
         response = FileResponse(open(generated_image_path, 'rb'), content_type='image/jpeg')
-        response['Content-Disposition'] = 'inline; filename="unique_eyeglass_frame.jpg"'  # Display in Postman
+        response['Content-Disposition'] = 'inline; filename="unique_eyeglass_frame.jpg"'
         return response
     except Exception as e:
-        return Response({"error": f"Error serving image: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # logger.error(f"Error occurred: {str(e)}")
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
