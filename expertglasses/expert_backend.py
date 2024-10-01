@@ -82,6 +82,7 @@ import os
 from collections import Counter
 from io import BytesIO
 
+
 import cv2
 import joblib
 import matplotlib.pyplot as plt

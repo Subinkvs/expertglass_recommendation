@@ -12,7 +12,8 @@ sys.path.append(main_directory_path)
 from expertglasses.expert_backend import ExpertEyeglassesRecommender  # Import your expert class
 from rest_framework import status
 from django.http import FileResponse
-
+import io
+from PIL import Image
 
 
 
@@ -53,18 +54,29 @@ def generate_unique_image(request):
     if 'file' not in request.FILES:
         return Response({"error": "No file provided."}, status=status.HTTP_400_BAD_REQUEST)
     
-    file = request.FILES['file']
+    file = request.FILES['file']  # Handle the uploaded file
     lang = request.data.get('lang', 'en')
-    img_path = save_uploaded_file(file)
+    
+    img_path = save_uploaded_file(file)  # Save the uploaded file
 
     try:
+        # Initialize and generate the unique image
         ins = ExpertEyeglassesRecommender(img_path, lang=lang)
-        generated_image_path = ins.plot_recommendations()
-        response = FileResponse(open(generated_image_path, 'rb'), content_type='image/jpeg')
+        generated_image = ins.generate_unique(show=False, block=False)
+
+        # Convert the generated numpy image to a PIL Image
+        pil_image = Image.fromarray(generated_image.astype('uint8'))
+
+        # Save the PIL image to a BytesIO object
+        img_io = io.BytesIO()
+        pil_image.save(img_io, format='JPEG')
+        img_io.seek(0)  # Go back to the beginning of the file
+
+        # Return the image as a FileResponse
+        response = FileResponse(img_io, content_type='image/jpeg')
         response['Content-Disposition'] = 'inline; filename="unique_eyeglass_frame.jpg"'
         return response
     except Exception as e:
-        # logger.error(f"Error occurred: {str(e)}")
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
@@ -82,11 +94,28 @@ def extract_facial_features(request):
     # Initialize recommender and extract facial features
     try:
         recommender = ExpertEyeglassesRecommender(img_path, lang=lang)
-        facial_features = recommender.expert_module()
+        eyeglasses_shape_vector, eyeglasses_color_vector = recommender.expert_module()  # Assuming this method returns the necessary vectors
+
+        # Construct the facial features dictionary
+        facial_features = {
+        "face_shape": recommender._ExpertEyeglassesRecommender__get_faceshape(),  # Access private method via name mangling
+        "hair_color": recommender._ExpertEyeglassesRecommender__get_hair(),
+        "beard": recommender._ExpertEyeglassesRecommender__get_beard(),
+        "jaw_type": recommender._ExpertEyeglassesRecommender__get_jawtype(),
+        "nose": recommender._ExpertEyeglassesRecommender__get_nose(),
+        "lips": recommender._ExpertEyeglassesRecommender__get_lips(),
+        "skintone": recommender._ExpertEyeglassesRecommender__get_skintone(),
+        "gender": recommender._ExpertEyeglassesRecommender__get_gender(),
+    }
+
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
+# Select the facial shape with the highest confidence value
+    highest_confidence_shape = max(facial_features["face_shape"], key=lambda x: x[0])
+    facial_features["face_shape"] = [highest_confidence_shape]  # Keep only the one with the highest confidence
     return Response({"facial_features": facial_features}, status=status.HTTP_200_OK)
+
 
 @api_view(['GET'])
 def get_explanation(request):
@@ -106,8 +135,10 @@ def get_explanation(request):
     try:
         recommender = ExpertEyeglassesRecommender(img_path, lang=lang)
         description = recommender.description
+        
+        organized_description = description.replace('\n', ' ').replace('\t', ' ').strip()
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    return Response({"explanation": description}, status=status.HTTP_200_OK)
+    return Response({"explanation": organized_description}, status=status.HTTP_200_OK)
 
