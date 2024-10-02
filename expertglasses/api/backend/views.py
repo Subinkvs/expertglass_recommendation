@@ -142,3 +142,29 @@ def get_explanation(request):
 
     return Response({"explanation": organized_description}, status=status.HTTP_200_OK)
 
+
+@api_view(['POST'])
+@parser_classes([MultiPartParser])
+def get_recommendations(request):
+    if 'file' not in request.FILES:
+        return Response({"error": "No file provided."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    file = request.FILES['file']
+    lang = request.data.get('lang', 'en')
+
+    img_path = save_uploaded_file(file)  # Save the uploaded file
+
+    try:
+        # Initialize the ExpertEyeglassesRecommender with the image path and language
+        ins = ExpertEyeglassesRecommender(img_path, lang=lang)
+
+        # Call plot_recommendations to get the images as base64
+        recommended_images = ins.plot_recommendations(return_links=True)
+
+        # Return the base64 images in the response
+        return Response({
+            'recommended_images': recommended_images
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

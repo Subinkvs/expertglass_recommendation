@@ -91,6 +91,7 @@ import pandas as pd
 import requests
 import tensorflow as tf
 from skimage import io
+from skimage import io as skimage_io
 
 from expertglasses.faceplusplus import extract_features, rotate_image
 from expertglasses.expert_and_explanation import translate_facevec2eyeglassesvec as map_face2glass
@@ -435,66 +436,68 @@ class ExpertEyeglassesRecommender:
             return shape_dist, idx
 
     def plot_recommendations(self, strategy='factorized', block=True, return_links=False):
-        '''Plot top 6 eyeframes recommendations from database by given strategy.
+            '''Plot top 6 eyeframes recommendations from database by given strategy.
 
-                Args:
-                    strategy (str, optional): The possible values are 'standart', 'factorized',
-                    'factorized_plus', 'color_only', 'shape_only' and 'most_popular'.
-                    The default value is 'factorized'.
-                    block (bool, optional): Block further command execution by matplotlib or not.
-                    The default value is True
-                    return_links (bool, optional): If True then return links to recommended images.
-                    The default value is False
+                    Args:
+                        strategy (str, optional): The possible values are 'standart', 'factorized',
+                        'factorized_plus', 'color_only', 'shape_only' and 'most_popular'.
+                        The default value is 'factorized'.
+                        block (bool, optional): Block further command execution by matplotlib or not.
+                        The default value is True
+                        return_links (bool, optional): If True then return links to recommended images.
+                        The default value is False
 
-                Returns:
-                    None.
+                    Returns:
+                        None.
 
-        '''
+            '''
 
-        shapevec, _ = self.__get_vecs()
+            shapevec, _ = self.__get_vecs()
 
-        # for ab-testing we compare recommendations with the ones randomly chosen best selling ones
-        if strategy == 'most_popular':
-            if shapevec[-1] > 0:
-                directory = 'abtest/man'
+            # for ab-testing we compare recommendations with the ones randomly chosen best selling ones
+            if strategy == 'standart':
+                if shapevec[-1] > 0:
+                    directory = 'abtest/man'
+                else:
+                    directory = 'abtest/woman'
+                ims = np.random.choice([os.path.join(directory, f) for f in os.listdir(directory)],
+                                    6, replace=False)
             else:
-                directory = 'abtest/woman'
-            ims = np.random.choice([os.path.join(directory, f) for f in os.listdir(directory)],
-                                   6, replace=False)
-        else:
-            dist, idx = self.distances(strategy)
-            # sort by index and take 6 biggest values, i.e. the most similar
-            top6 = idx[dist.argsort()[-6:][::-1]]
-            ims = self.database.iloc[top6].image_link.tolist()
+                dist, idx = self.distances(strategy)
+                # sort by index and take 6 biggest values, i.e. the most similar
+                top6 = idx[dist.argsort()[-6:][::-1]]
+                ims = self.database.iloc[top6].image_link.tolist()
 
-        # lambda function for converting image links to the necessary format
-        pretty = lambda x: 'http:' + x if x[0] == '/' else x
+            # lambda function for converting image links to the necessary format
+            pretty = lambda x: x if x.startswith('http') else 'http://' + x if x.startswith('/') else x
 
-        # if interested in image-links only, simply return them
-        if return_links:
-            return [pretty(img) for img in ims]
 
-        fig = plt.figure(figsize=(21, 14))
-        axes = fig.subplots(2, 3, sharex='col', sharey='row')
+            # if interested in image-links only, simply return them
+            if return_links:
+                return [pretty(img) for img in ims]
 
-        # two rows
-        for i in range(2):
-            # three columns
-            for j in range(3):
-                axes[i, j].text(200, 300, str(i * 3 + j + 1),
-                                fontsize=18, ha='center')
+            fig = plt.figure(figsize=(21, 14))
+            axes = fig.subplots(2, 3, sharex='col', sharey='row')
 
-                # download from internet
-                img = io.imread(pretty(ims[i * 3 + j]))
+            # two rows
+            for i in range(2):
+                # three columns
+                for j in range(3):
+                    axes[i, j].text(200, 300, str(i * 3 + j + 1),
+                                    fontsize=18, ha='center')
 
-                # guaranty that all images have the same ratio, if not, pad it with white color
-                if img.shape[1] / img.shape[0] != 1.5:
-                    offset = int((2/3 - img.shape[0] / img.shape[1]) * img.shape[1] // 2)
-                    img = cv2.copyMakeBorder(img, offset, offset, 0, 0,
-                                             cv2.BORDER_CONSTANT,
-                                             value=(255, 255, 255))
-                axes[i, j].imshow(cv2.resize(img, (375, 250)))
-        plt.show(block=block)
+                    # download from internet
+                    img = io.imread(pretty(ims[i * 3 + j]))
+
+                    # guaranty that all images have the same ratio, if not, pad it with white color
+                    if img.shape[1] / img.shape[0] != 1.5:
+                        offset = int((2/3 - img.shape[0] / img.shape[1]) * img.shape[1] // 2)
+                        img = cv2.copyMakeBorder(img, offset, offset, 0, 0,
+                                                cv2.BORDER_CONSTANT,
+                                                value=(255, 255, 255))
+                    axes[i, j].imshow(cv2.resize(img, (375, 250)))
+            plt.show(block=block)
+            return ims
 
     def update_image(self, image):
         '''Update current image in the system by given image path.
