@@ -142,7 +142,6 @@ def get_explanation(request):
 
     return Response({"explanation": organized_description}, status=status.HTTP_200_OK)
 
-
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
 def get_recommendations(request):
