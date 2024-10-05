@@ -14,6 +14,9 @@ from rest_framework import status
 from django.http import FileResponse
 import io
 from PIL import Image
+from io import BytesIO
+import base64
+import requests
 
 
 
@@ -117,7 +120,7 @@ def extract_facial_features(request):
     return Response({"facial_features": facial_features}, status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
+@api_view(['POST'])
 def get_explanation(request):
     
     if 'file' not in request.FILES:
@@ -157,12 +160,24 @@ def get_recommendations(request):
         # Initialize the ExpertEyeglassesRecommender with the image path and language
         ins = ExpertEyeglassesRecommender(img_path, lang=lang)
 
-        # Call plot_recommendations to get the images as base64
+        # Call plot_recommendations to get the images as links
         recommended_images = ins.plot_recommendations(return_links=True)
+
+        # Convert recommended image links to base64
+        base64_images = []
+        for img_url in recommended_images:
+            # Download the image
+            response = requests.get(img_url)
+            if response.status_code == 200:
+                img = Image.open(BytesIO(response.content))
+                buffered = BytesIO()
+                img.save(buffered, format="JPEG")  # Change format if needed
+                img_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
+                base64_images.append(f"data:image/jpeg;base64,{img_str}")
 
         # Return the base64 images in the response
         return Response({
-            'recommended_images': recommended_images
+            'recommended_images': base64_images
         }, status=status.HTTP_200_OK)
 
     except Exception as e:

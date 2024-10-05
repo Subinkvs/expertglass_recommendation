@@ -435,33 +435,33 @@ class ExpertEyeglassesRecommender:
             shape_dist = sub_df.dot(shapevec[:-1] / np.linalg.norm(shapevec[:-1]))
             return shape_dist, idx
 
-    def plot_recommendations(self, strategy='factorized', block=True, return_links=False):
-        '''Plot top 6 eyeframes recommendations from database by given strategy.
+    
+    def plot_recommendations(self, strategy='factorized', block=True, return_links=False, return_images=False):
+        '''Plot or return top 6 eyeframe recommendations from database by given strategy.
 
-                Args:
-                    strategy (str, optional): The possible values are 'standart', 'factorized',
-                    'factorized_plus', 'color_only', 'shape_only' and 'most_popular'.
-                    The default value is 'factorized'.
-                    block (bool, optional): Block further command execution by matplotlib or not.
-                    The default value is True
-                    return_links (bool, optional): If True then return links to recommended images.
-                    The default value is False
+        Args:
+            strategy (str, optional): The possible values are 'standard', 'factorized',
+            'factorized_plus', 'color_only', 'shape_only' and 'most_popular'.
+            The default value is 'factorized'.
+            block (bool, optional): Block further command execution by matplotlib or not.
+            The default value is True.
+            return_links (bool, optional): If True, then return links to recommended images.
+            The default value is False.
+            return_images (bool, optional): If True, return the six images as numpy arrays.
+            The default value is False.
 
-                Returns:
-                    None.
-
+        Returns:
+            List of image URLs if return_links=True.
+            List of numpy arrays of images if return_images=True.
+            None if plotting the images.
         '''
 
         shapevec, _ = self.__get_vecs()
 
-        # for ab-testing we compare recommendations with the ones randomly chosen best selling ones
+        # for ab-testing we compare recommendations with the ones randomly chosen best-selling ones
         if strategy == 'most_popular':
-            if shapevec[-1] > 0:
-                directory = 'abtest/man'
-            else:
-                directory = 'abtest/woman'
-            ims = np.random.choice([os.path.join(directory, f) for f in os.listdir(directory)],
-                                   6, replace=False)
+            directory = 'abtest/man' if shapevec[-1] > 0 else 'abtest/woman'
+            ims = np.random.choice([os.path.join(directory, f) for f in os.listdir(directory)], 6, replace=False)
         else:
             dist, idx = self.distances(strategy)
             # sort by index and take 6 biggest values, i.e. the most similar
@@ -471,30 +471,47 @@ class ExpertEyeglassesRecommender:
         # lambda function for converting image links to the necessary format
         pretty = lambda x: 'http:' + x if x[0] == '/' else x
 
-        # if interested in image-links only, simply return them
+        # If interested in image-links only, simply return them
         if return_links:
             return [pretty(img) for img in ims]
 
+        # If returning images, download and process them
+        if return_images:
+            image_arrays = []
+            for img_link in ims:
+                img_url = pretty(img_link)
+                img = io.imread(img_url)
+
+                # Ensure all images have the same ratio, if not, pad it with white color
+                if img.shape[1] / img.shape[0] != 1.5:
+                    offset = int((2/3 - img.shape[0] / img.shape[1]) * img.shape[1] // 2)
+                    img = cv2.copyMakeBorder(img, offset, offset, 0, 0, cv2.BORDER_CONSTANT, value=(255, 255, 255))
+
+                resized_img = cv2.resize(img, (375, 250))
+                image_arrays.append(resized_img)
+
+            return image_arrays  # Return the list of images as numpy arrays
+
+        # Plot the images if not returning them
         fig = plt.figure(figsize=(21, 14))
         axes = fig.subplots(2, 3, sharex='col', sharey='row')
 
-        # two rows
+        # Two rows
         for i in range(2):
-            # three columns
+            # Three columns
             for j in range(3):
-                axes[i, j].text(200, 300, str(i * 3 + j + 1),
-                                fontsize=18, ha='center')
+                axes[i, j].text(200, 300, str(i * 3 + j + 1), fontsize=18, ha='center')
 
-                # download from internet
+                # Download from internet
                 img = io.imread(pretty(ims[i * 3 + j]))
 
-                # guaranty that all images have the same ratio, if not, pad it with white color
+                # Guarantee that all images have the same ratio, if not, pad it with white color
                 if img.shape[1] / img.shape[0] != 1.5:
                     offset = int((2/3 - img.shape[0] / img.shape[1]) * img.shape[1] // 2)
-                    img = cv2.copyMakeBorder(img, offset, offset, 0, 0,
-                                             cv2.BORDER_CONSTANT,
-                                             value=(255, 255, 255))
+                    img = cv2.copyMakeBorder(img, offset, offset, 0, 0, cv2.BORDER_CONSTANT, value=(255, 255, 255))
+
                 axes[i, j].imshow(cv2.resize(img, (375, 250)))
+
         plt.show(block=block)
         
     def update_image(self, image):
