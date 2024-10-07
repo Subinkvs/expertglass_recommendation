@@ -14,9 +14,6 @@ from rest_framework import status
 from django.http import FileResponse
 import io
 from PIL import Image
-from io import BytesIO
-import base64
-import requests
 
 
 
@@ -31,25 +28,6 @@ def save_uploaded_file(file):
         shutil.copyfileobj(file.file, buffer)
     return img_path
 
-@api_view(['POST'])
-@parser_classes([MultiPartParser])
-def upload_image(request):
-    if 'file' not in request.FILES:
-        return Response({"error": "No file provided."}, status=status.HTTP_400_BAD_REQUEST)
-    
-    file = request.FILES['file']
-    lang = request.data.get('lang', 'en')
-    
-    # Save uploaded image to a file
-    img_path = save_uploaded_file(file)
-    
-    # Initialize the recommender
-    try:
-        recommender = ExpertEyeglassesRecommender(img_path, lang=lang)
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-    return Response({"message": "Image uploaded successfully"}, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
