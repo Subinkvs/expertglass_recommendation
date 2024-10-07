@@ -115,8 +115,8 @@ def extract_facial_features(request):
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # Select the facial shape with the highest confidence value
-    highest_confidence_shape = max(facial_features["face_shape"], key=lambda x: x[0])
-    facial_features["face_shape"] = [highest_confidence_shape]  # Keep only the one with the highest confidence
+    # highest_confidence_shape = max(facial_features["face_shape"], key=lambda x: x[0])
+    # facial_features["face_shape"] = [highest_confidence_shape]  # Keep only the one with the highest confidence
     return Response({"facial_features": facial_features}, status=status.HTTP_200_OK)
 
 
@@ -163,21 +163,9 @@ def get_recommendations(request):
         # Call plot_recommendations to get the images as links
         recommended_images = ins.plot_recommendations(return_links=True)
 
-        # Convert recommended image links to base64
-        base64_images = []
-        for img_url in recommended_images:
-            # Download the image
-            response = requests.get(img_url)
-            if response.status_code == 200:
-                img = Image.open(BytesIO(response.content))
-                buffered = BytesIO()
-                img.save(buffered, format="JPEG")  # Change format if needed
-                img_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
-                base64_images.append(f"data:image/jpeg;base64,{img_str}")
-
-        # Return the base64 images in the response
+        # Return the image links in the response
         return Response({
-            'recommended_images': base64_images
+            'recommended_images': recommended_images
         }, status=status.HTTP_200_OK)
 
     except Exception as e:

@@ -81,6 +81,7 @@ import json
 import os
 from collections import Counter
 from io import BytesIO
+from PIL import Image
 
 
 import cv2
@@ -435,26 +436,22 @@ class ExpertEyeglassesRecommender:
             shape_dist = sub_df.dot(shapevec[:-1] / np.linalg.norm(shapevec[:-1]))
             return shape_dist, idx
 
-    
-    def plot_recommendations(self, strategy='factorized', block=True, return_links=False, return_images=False):
+    def plot_recommendations(self, strategy='factorized', block=True, return_links=False):
         '''Plot or return top 6 eyeframe recommendations from database by given strategy.
 
-        Args:
-            strategy (str, optional): The possible values are 'standard', 'factorized',
-            'factorized_plus', 'color_only', 'shape_only' and 'most_popular'.
-            The default value is 'factorized'.
-            block (bool, optional): Block further command execution by matplotlib or not.
-            The default value is True.
-            return_links (bool, optional): If True, then return links to recommended images.
-            The default value is False.
-            return_images (bool, optional): If True, return the six images as numpy arrays.
-            The default value is False.
+    Args:
+        strategy (str, optional): The possible values are 'standard', 'factorized',
+        'factorized_plus', 'color_only', 'shape_only' and 'most_popular'.
+        The default value is 'factorized'.
+        block (bool, optional): Block further command execution by matplotlib or not.
+        The default value is True.
+        return_links (bool, optional): If True, then return links to recommended images.
+        The default value is False.
 
-        Returns:
-            List of image URLs if return_links=True.
-            List of numpy arrays of images if return_images=True.
-            None if plotting the images.
-        '''
+    Returns:
+        List of image URLs if return_links=True.
+        None if plotting the images.
+    '''
 
         shapevec, _ = self.__get_vecs()
 
@@ -475,24 +472,7 @@ class ExpertEyeglassesRecommender:
         if return_links:
             return [pretty(img) for img in ims]
 
-        # If returning images, download and process them
-        if return_images:
-            image_arrays = []
-            for img_link in ims:
-                img_url = pretty(img_link)
-                img = io.imread(img_url)
-
-                # Ensure all images have the same ratio, if not, pad it with white color
-                if img.shape[1] / img.shape[0] != 1.5:
-                    offset = int((2/3 - img.shape[0] / img.shape[1]) * img.shape[1] // 2)
-                    img = cv2.copyMakeBorder(img, offset, offset, 0, 0, cv2.BORDER_CONSTANT, value=(255, 255, 255))
-
-                resized_img = cv2.resize(img, (375, 250))
-                image_arrays.append(resized_img)
-
-            return image_arrays  # Return the list of images as numpy arrays
-
-        # Plot the images if not returning them
+        # If not returning links, plot the images
         fig = plt.figure(figsize=(21, 14))
         axes = fig.subplots(2, 3, sharex='col', sharey='row')
 
@@ -513,6 +493,8 @@ class ExpertEyeglassesRecommender:
                 axes[i, j].imshow(cv2.resize(img, (375, 250)))
 
         plt.show(block=block)
+        return img
+
         
     def update_image(self, image):
         '''Update current image in the system by given image path.
