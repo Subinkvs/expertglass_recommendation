@@ -14,6 +14,7 @@ from rest_framework import status
 from django.http import FileResponse
 import io
 from PIL import Image
+import re
 
 
 
@@ -23,9 +24,13 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 def save_uploaded_file(file):
     """ Helper function to save uploaded files to a temporary location """
-    img_path = os.path.join(UPLOAD_DIR, file.name)
+    # Sanitize the file name to remove special characters
+    safe_filename = re.sub(r'[^\w\-_\. ]', '_', file.name)
+    img_path = os.path.join(UPLOAD_DIR, safe_filename)
+    
     with open(img_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
+    
     return img_path
 
 
