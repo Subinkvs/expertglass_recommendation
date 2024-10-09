@@ -80,7 +80,7 @@ def extract_facial_features(request):
     # Initialize recommender and extract facial features
     try:
         recommender = ExpertEyeglassesRecommender(img_path, lang=lang)
-        eyeglasses_shape_vector, eyeglasses_color_vector = recommender.expert_module()  # Assuming this method returns the necessary vectors
+       
 
         # Construct the facial features dictionary
         facial_features = {
