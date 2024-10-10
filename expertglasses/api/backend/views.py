@@ -93,17 +93,21 @@ def generate_unique_image(request):
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
 def extract_facial_features(request):
-    if 'file' not in request.FILES:
-        return Response({"error": "No file provided."}, status=status.HTTP_400_BAD_REQUEST)
-    
-    file = request.FILES['file']
+    file = request.FILES.get('file', None)
+    file_url = request.data.get('file_url', None)
     lang = request.data.get('lang', 'en')
-    
-    # Save uploaded image
-    img_path = save_uploaded_file(file)
 
-    # Initialize recommender and extract facial features
+    if not file and not file_url:
+        return Response({"error": "No file or URL provided."}, status=status.HTTP_400_BAD_REQUEST)
+
     try:
+        if file:
+            # If a file is uploaded, save it
+            img_path = save_uploaded_file(file)
+        elif file_url:
+            # If a URL is provided, download the image
+            img_path = download_image_from_url(file_url)
+        
         recommender = ExpertEyeglassesRecommender(img_path, lang=lang)
        
 
@@ -131,19 +135,21 @@ def extract_facial_features(request):
 @api_view(['POST'])
 def get_explanation(request):
     
-    if 'file' not in request.FILES:
-        return Response({"error": "No file provided."}, status=status.HTTP_400_BAD_REQUEST)
-    
-    file = request.FILES['file']
-    lang = request.data.get('lang','en')
-    
-    # Save uploaded image
-    img_path = save_uploaded_file(file)
-    if not img_path or not os.path.exists(img_path):
-        return Response({"error": "Image path not provided or does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+    file = request.FILES.get('file', None)
+    file_url = request.data.get('file_url', None)
+    lang = request.data.get('lang', 'en')
 
-    # Initialize recommender and get explanation
+    if not file and not file_url:
+        return Response({"error": "No file or URL provided."}, status=status.HTTP_400_BAD_REQUEST)
+
     try:
+        if file:
+            # If a file is uploaded, save it
+            img_path = save_uploaded_file(file)
+        elif file_url:
+            # If a URL is provided, download the image
+            img_path = download_image_from_url(file_url)
+        
         recommender = ExpertEyeglassesRecommender(img_path, lang=lang)
         description = recommender.description
         
@@ -156,15 +162,21 @@ def get_explanation(request):
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
 def get_recommendations(request):
-    if 'file' not in request.FILES:
-        return Response({"error": "No file provided."}, status=status.HTTP_400_BAD_REQUEST)
-    
-    file = request.FILES['file']
+    file = request.FILES.get('file', None)
+    file_url = request.data.get('file_url', None)
     lang = request.data.get('lang', 'en')
 
-    img_path = save_uploaded_file(file)  # Save the uploaded file
+    if not file and not file_url:
+        return Response({"error": "No file or URL provided."}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
+        if file:
+            # If a file is uploaded, save it
+            img_path = save_uploaded_file(file)
+        elif file_url:
+            # If a URL is provided, download the image
+            img_path = download_image_from_url(file_url)
+        
         # Initialize the ExpertEyeglassesRecommender with the image path and language
         ins = ExpertEyeglassesRecommender(img_path, lang=lang)
 
