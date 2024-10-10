@@ -30,7 +30,8 @@ def save_uploaded_file(file):
     img_path = os.path.join(UPLOAD_DIR, safe_filename)
     
     with open(img_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        for chunk in file.chunks():
+            buffer.write(chunk)
     
     return img_path
 def download_image_from_url(url):
@@ -43,9 +44,11 @@ def download_image_from_url(url):
         file_name = re.sub(r'[^\w\-_\. ]', '_', os.path.basename(url))
         img_path = os.path.join(UPLOAD_DIR, file_name)
 
-        # Save the image from the URL to the specified path
+            # Save the image in chunks
         with open(img_path, 'wb') as out_file:
-            shutil.copyfileobj(response.raw, out_file)
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    out_file.write(chunk)
         
         return img_path
     except Exception as e:
@@ -72,6 +75,11 @@ def generate_unique_image(request):
         # Initialize and generate the unique image
         ins = ExpertEyeglassesRecommender(img_path, lang=lang)
         generated_image = ins.generate_unique(show=False, block=False)
+      
+        try:
+            os.remove(img_path)
+        except OSError:
+            pass  # Ignore cleanup errors
 
         # Convert the generated numpy image to a PIL Image
         pil_image = Image.fromarray(generated_image.astype('uint8'))
