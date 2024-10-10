@@ -15,6 +15,7 @@ from django.http import FileResponse
 import io
 from PIL import Image
 import re
+import requests
 
 
 
@@ -32,20 +33,42 @@ def save_uploaded_file(file):
         shutil.copyfileobj(file.file, buffer)
     
     return img_path
+def download_image_from_url(url):
+    """ Helper function to download image from a URL """
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()  # Ensure the request was successful
 
+        # Extract filename from URL
+        file_name = re.sub(r'[^\w\-_\. ]', '_', os.path.basename(url))
+        img_path = os.path.join(UPLOAD_DIR, file_name)
+
+        # Save the image from the URL to the specified path
+        with open(img_path, 'wb') as out_file:
+            shutil.copyfileobj(response.raw, out_file)
+        
+        return img_path
+    except Exception as e:
+        raise Exception(f"Failed to download image from URL: {str(e)}")
 
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
 def generate_unique_image(request):
-    if 'file' not in request.FILES:
-        return Response({"error": "No file provided."}, status=status.HTTP_400_BAD_REQUEST)
-    
-    file = request.FILES['file']  # Handle the uploaded file
+    file = request.FILES.get('file', None)
+    file_url = request.data.get('file_url', None)
     lang = request.data.get('lang', 'en')
-    
-    img_path = save_uploaded_file(file)  # Save the uploaded file
+
+    if not file and not file_url:
+        return Response({"error": "No file or URL provided."}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
+        if file:
+            # If a file is uploaded, save it
+            img_path = save_uploaded_file(file)
+        elif file_url:
+            # If a URL is provided, download the image
+            img_path = download_image_from_url(file_url)
+        
         # Initialize and generate the unique image
         ins = ExpertEyeglassesRecommender(img_path, lang=lang)
         generated_image = ins.generate_unique(show=False, block=False)
@@ -56,15 +79,17 @@ def generate_unique_image(request):
         # Save the PIL image to a BytesIO object
         img_io = io.BytesIO()
         pil_image.save(img_io, format='JPEG')
-        img_io.seek(0)  # Go back to the beginning of the file
+        img_io.seek(0)
 
         # Return the image as a FileResponse
         response = FileResponse(img_io, content_type='image/jpeg')
         response['Content-Disposition'] = 'inline; filename="unique_eyeglass_frame.jpg"'
         return response
+
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+    
+    
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
 def extract_facial_features(request):
