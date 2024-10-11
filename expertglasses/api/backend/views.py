@@ -18,14 +18,15 @@ import re
 import requests
 
 
-#Directory to temporarily save uploaded images
+
+# Directory to temporarily save uploaded images
 UPLOAD_DIR = os.path.join(settings.MEDIA_ROOT, "uploaded_images")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 def save_uploaded_file(file):
     """ Helper function to save uploaded files to a temporary location """
-    # Sanitize the file name and handle encoding issues
-    safe_filename = re.sub(r'[^\w\-_\. ]', '_', file.name.encode('utf-8', errors='ignore').decode('utf-8'))
+    # Sanitize the file name to remove special characters
+    safe_filename = re.sub(r'[^\w\-_\. ]', '_', file.name)
     img_path = os.path.join(UPLOAD_DIR, safe_filename)
     
     with open(img_path, "wb") as buffer:
@@ -33,22 +34,17 @@ def save_uploaded_file(file):
             buffer.write(chunk)
     
     return img_path
-
 def download_image_from_url(url):
     """ Helper function to download image from a URL """
     try:
         response = requests.get(url, stream=True)
         response.raise_for_status()  # Ensure the request was successful
 
-        # Ensure the URL points to an image file
-        if 'image' not in response.headers.get('Content-Type', ''):
-            raise Exception("URL does not point to a valid image file")
-
-        # Extract and sanitize the filename
-        file_name = re.sub(r'[^\w\-_\. ]', '_', os.path.basename(url).encode('utf-8', errors='ignore').decode('utf-8'))
+        # Extract filename from URL
+        file_name = re.sub(r'[^\w\-_\. ]', '_', os.path.basename(url))
         img_path = os.path.join(UPLOAD_DIR, file_name)
 
-        # Save the image in binary mode
+            # Save the image in chunks
         with open(img_path, 'wb') as out_file:
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:
@@ -69,22 +65,23 @@ def generate_unique_image(request):
         return Response({"error": "No file or URL provided."}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        # Either save the uploaded file or download from the URL
         if file:
+            # If a file is uploaded, save it
             img_path = save_uploaded_file(file)
         elif file_url:
+            # If a URL is provided, download the image
             img_path = download_image_from_url(file_url)
         
-        # Initialize and generate the unique image using the recommender
+        # Initialize and generate the unique image
         ins = ExpertEyeglassesRecommender(img_path, lang=lang)
         generated_image = ins.generate_unique(show=False, block=False)
       
         try:
-            os.remove(img_path)  # Clean up temporary image file
+            os.remove(img_path)
         except OSError:
             pass  # Ignore cleanup errors
 
-        # Convert the generated numpy array to a PIL Image
+        # Convert the generated numpy image to a PIL Image
         pil_image = Image.fromarray(generated_image.astype('uint8'))
 
         # Save the PIL image to a BytesIO object
@@ -93,12 +90,13 @@ def generate_unique_image(request):
         img_io.seek(0)
 
         # Return the image as a FileResponse
-        response = FileResponse(img_io, content_type='image/jpeg')
+        response = FileResponse(img_io, content_type='image/jpeg; charset=utf-8')
         response['Content-Disposition'] = 'inline; filename="unique_eyeglass_frame.jpg"'
         return response
 
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
     
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
