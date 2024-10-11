@@ -26,7 +26,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 def save_uploaded_file(file):
     """ Helper function to save uploaded files to a temporary location """
     # Sanitize the file name to remove special characters
-    safe_filename = re.sub(r'[^\w\-_\. ]', '_', file.name)
+    safe_filename = re.sub(r'[^\w\-_\. ]', '_', file.name.encode('utf-8', errors='ignore').decode('utf-8'))
     img_path = os.path.join(UPLOAD_DIR, safe_filename)
     
     with open(img_path, "wb") as buffer:
@@ -34,17 +34,18 @@ def save_uploaded_file(file):
             buffer.write(chunk)
     
     return img_path
+
 def download_image_from_url(url):
     """ Helper function to download image from a URL """
     try:
         response = requests.get(url, stream=True)
         response.raise_for_status()  # Ensure the request was successful
 
-        # Extract filename from URL
-        file_name = re.sub(r'[^\w\-_\. ]', '_', os.path.basename(url))
+        # Extract filename from URL, sanitize it, and handle encoding
+        file_name = re.sub(r'[^\w\-_\. ]', '_', os.path.basename(url).encode('utf-8', errors='ignore').decode('utf-8'))
         img_path = os.path.join(UPLOAD_DIR, file_name)
 
-            # Save the image in chunks
+        # Save the image in chunks
         with open(img_path, 'wb') as out_file:
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:
@@ -90,13 +91,12 @@ def generate_unique_image(request):
         img_io.seek(0)
 
         # Return the image as a FileResponse
-        response = FileResponse(img_io, content_type='image/jpeg; charset=utf-8')
+        response = FileResponse(img_io, content_type='image/jpeg')
         response['Content-Disposition'] = 'inline; filename="unique_eyeglass_frame.jpg"'
         return response
 
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
     
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
