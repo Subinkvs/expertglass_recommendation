@@ -90,7 +90,7 @@ def generate_unique_image(request):
         img_io.seek(0)
 
         # Return the image as a FileResponse
-        response = FileResponse(img_io, content_type='image/jpeg')
+        response = FileResponse(img_io, content_type='image/jpeg; charset=utf-8')
         response['Content-Disposition'] = 'inline; filename="unique_eyeglass_frame.jpg"'
         return response
 
@@ -117,6 +117,11 @@ def extract_facial_features(request):
             img_path = download_image_from_url(file_url)
         
         recommender = ExpertEyeglassesRecommender(img_path, lang=lang)
+        
+        try:
+            os.remove(img_path)
+        except OSError:
+            pass  # Ignore cleanup errors
        
 
         # Construct the facial features dictionary
@@ -161,6 +166,11 @@ def get_explanation(request):
         recommender = ExpertEyeglassesRecommender(img_path, lang=lang)
         description = recommender.description
         
+        try:
+            os.remove(img_path)
+        except OSError:
+            pass  # Ignore cleanup errors
+        
         organized_description = description.replace('\n', ' ').replace('\t', ' ').strip()
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -187,6 +197,11 @@ def get_recommendations(request):
         
         # Initialize the ExpertEyeglassesRecommender with the image path and language
         ins = ExpertEyeglassesRecommender(img_path, lang=lang)
+        
+        try:
+            os.remove(img_path)
+        except OSError:
+            pass  # Ignore cleanup errors
 
         # Call plot_recommendations to get the images as links
         recommended_images = ins.plot_recommendations(return_links=True)
