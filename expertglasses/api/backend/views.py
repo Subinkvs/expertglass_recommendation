@@ -90,7 +90,7 @@ def generate_unique_image(request):
         img_io.seek(0)
 
         # Return the image as a FileResponse
-        response = FileResponse(img_io, content_type='image/jpeg; charset=utf-8')
+        response = FileResponse(img_io, content_type='image/jpeg;')
         response['Content-Disposition'] = 'inline; filename="unique_eyeglass_frame.jpg"'
         return response
 
