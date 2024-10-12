@@ -64,38 +64,36 @@ def generate_unique_image(request):
     if not file and not file_url:
         return Response({"error": "No file or URL provided."}, status=status.HTTP_400_BAD_REQUEST)
 
+  
+    if file:
+        # If a file is uploaded, save it
+        img_path = save_uploaded_file(file)
+    elif file_url:
+        # If a URL is provided, download the image
+        img_path = download_image_from_url(file_url)
+    
+    # Initialize and generate the unique image
+    ins = ExpertEyeglassesRecommender(img_path, lang=lang)
+    generated_image = ins.generate_unique(show=False, block=False)
+    
     try:
-        if file:
-            # If a file is uploaded, save it
-            img_path = save_uploaded_file(file)
-        elif file_url:
-            # If a URL is provided, download the image
-            img_path = download_image_from_url(file_url)
-        
-        # Initialize and generate the unique image
-        ins = ExpertEyeglassesRecommender(img_path, lang=lang)
-        generated_image = ins.generate_unique(show=False, block=False)
-      
-        try:
-            os.remove(img_path)
-        except OSError:
-            pass  # Ignore cleanup errors
+        os.remove(img_path)
+    except OSError:
+        pass  # Ignore cleanup errors
 
-        # Convert the generated numpy image to a PIL Image
-        pil_image = Image.fromarray(generated_image.astype('uint8'))
+    # Convert the generated numpy image to a PIL Image
+    pil_image = Image.fromarray(generated_image.astype('uint8'))
 
-        # Save the PIL image to a BytesIO object
-        img_io = io.BytesIO()
-        pil_image.save(img_io, format='JPEG')
-        img_io.seek(0)
+    # Save the PIL image to a BytesIO object
+    img_io = io.BytesIO()
+    pil_image.save(img_io, format='JPEG')
+    img_io.seek(0)
 
-        # Return the image as a FileResponse
-        response = FileResponse(img_io, content_type='image/jpeg;')
-        response['Content-Disposition'] = 'inline; filename="unique_eyeglass_frame.jpg"'
-        return response
+    # Return the image as a FileResponse
+    response = FileResponse(img_io, content_type='image/jpeg;')
+    response['Content-Disposition'] = 'inline; filename="unique_eyeglass_frame.jpg"'
+    return response
 
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     
 @api_view(['POST'])
