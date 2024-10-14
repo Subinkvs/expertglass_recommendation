@@ -1,6 +1,6 @@
 # Eyeglass recommendation
 
-An eyeglasses recommendation system based on an uploaded user image uses image analysis and facial recognition techniques to suggest suitable eyewear. The process typically involves:
+An eyeglasses recommendation system based on an uploaded user image uses machine learning and image analysis techniques to suggest suitable eyewear. The process involves:
 
 1.Image Upload: The user uploads a front-facing image of their face.
 
