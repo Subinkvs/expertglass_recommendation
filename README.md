@@ -1,6 +1,6 @@
 # Eyeglass recommendation
 
-An eyeglasses recommendation system based on an uploaded user image uses machine learning for image analysis techniques to suggest suitable eyewear. The process involves:
+An eyeglasses recommendation system, based on an uploaded user image, utilizes machine learning and image analysis techniques to suggest suitable eyewear. The system is integrated with Django REST API to provide a seamless user experience. The process works as follows:
 
 1.Image Upload: The user uploads a front-facing image of their face.
 
