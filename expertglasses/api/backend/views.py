@@ -86,12 +86,12 @@ def generate_unique_image(request):
 
     # Save the PIL image to a BytesIO object
     img_io = io.BytesIO()
-    pil_image.save(img_io, format='JPEG')
+    pil_image.save(img_io, format='PNG')
     img_io.seek(0)
 
     # Return the image as a FileResponse
-    response = FileResponse(img_io, content_type='image/jpeg;')
-    response['Content-Disposition'] = 'inline; filename="unique_eyeglass_frame.jpg"'
+    response = FileResponse(img_io, content_type='image/png;')
+    response['Content-Disposition'] = 'inline;'
     return response
 
     
@@ -144,6 +144,7 @@ def extract_facial_features(request):
 
 
 @api_view(['POST'])
+@parser_classes([MultiPartParser])
 def get_explanation(request):
     
     file = request.FILES.get('file', None)
@@ -175,6 +176,7 @@ def get_explanation(request):
 
     return Response({"explanation": organized_description}, status=status.HTTP_200_OK)
 
+
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
 def get_recommendations(request):
@@ -187,26 +189,22 @@ def get_recommendations(request):
 
     try:
         if file:
-            # If a file is uploaded, save it
             img_path = save_uploaded_file(file)
         elif file_url:
-            # If a URL is provided, download the image
             img_path = download_image_from_url(file_url)
         
-        # Initialize the ExpertEyeglassesRecommender with the image path and language
         ins = ExpertEyeglassesRecommender(img_path, lang=lang)
         
         try:
             os.remove(img_path)
         except OSError:
-            pass  # Ignore cleanup errors
+            pass
 
-        # Call plot_recommendations to get the images as links
-        recommended_images = ins.plot_recommendations(return_links=True)
+        image_links = ins.plot_recommendations(return_links=True)
 
-        # Return the image links in the response
+        # Return the image links and names in the response
         return Response({
-            'recommended_images': recommended_images
+            'recommended_images': image_links # This now contains the correct local paths
         }, status=status.HTTP_200_OK)
 
     except Exception as e:

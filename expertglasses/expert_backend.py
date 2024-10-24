@@ -437,55 +437,39 @@ class ExpertEyeglassesRecommender:
             return shape_dist, idx
 
     def plot_recommendations(self, strategy='factorized', block=True, return_links=False):
-        '''Plot or return top 6 eyeframe recommendations from database by given strategy.
-
-    Args:
-        strategy (str, optional): The possible values are 'standard', 'factorized',
-        'factorized_plus', 'color_only', 'shape_only' and 'most_popular'.
-        The default value is 'factorized'.
-        block (bool, optional): Block further command execution by matplotlib or not.
-        The default value is True.
-        return_links (bool, optional): If True, then return links to recommended images.
-        The default value is False.
-
-    Returns:
-        List of image URLs if return_links=True.
-        None if plotting the images.
-    '''
+        '''Plot or return top 6 eyeframe recommendations from the database by given strategy.'''
 
         shapevec, _ = self.__get_vecs()
 
-        # for ab-testing we compare recommendations with the ones randomly chosen best-selling ones
+        # Set directory based on gender from the shapevec
+        directory = 'abtest/man' if shapevec[-1] > 0 else 'abtest/woman'
+        
         if strategy == 'most_popular':
-            directory = 'abtest/man' if shapevec[-1] > 0 else 'abtest/woman'
+            # Randomly choose 6 images from the specified directory
             ims = np.random.choice([os.path.join(directory, f) for f in os.listdir(directory)], 6, replace=False)
         else:
             dist, idx = self.distances(strategy)
-            # sort by index and take 6 biggest values, i.e. the most similar
             top6 = idx[dist.argsort()[-6:][::-1]]
             ims = self.database.iloc[top6].image_link.tolist()
 
-        # lambda function for converting image links to the necessary format
-        pretty = lambda x: 'http:' + x if x[0] == '/' else x
-
-        # If interested in image-links only, simply return them
+      
         if return_links:
-            return [pretty(img) for img in ims]
+            # Assuming Nginx is serving the directory at 'http://your-server-ip/glassrec/'
+            base_url = 'http://172-31-32-118/glassrec/expertglass_recommendation/expertglasses/' 
+            # Construct the full URLs for each image
+            ims = [f"{base_url}{directory}/{os.path.basename(img)}" for img in ims]
 
-        # If not returning links, plot the images
+        # Plot the images if not returning links
         fig = plt.figure(figsize=(21, 14))
         axes = fig.subplots(2, 3, sharex='col', sharey='row')
 
-        # Two rows
         for i in range(2):
-            # Three columns
             for j in range(3):
                 axes[i, j].text(200, 300, str(i * 3 + j + 1), fontsize=18, ha='center')
 
-                # Download from internet
-                img = io.imread(pretty(ims[i * 3 + j]))
+                img = io.imread(ims[i * 3 + j])  # Directly use the local path
 
-                # Guarantee that all images have the same ratio, if not, pad it with white color
+                # Adjust image shape for displaying
                 if img.shape[1] / img.shape[0] != 1.5:
                     offset = int((2/3 - img.shape[0] / img.shape[1]) * img.shape[1] // 2)
                     img = cv2.copyMakeBorder(img, offset, offset, 0, 0, cv2.BORDER_CONSTANT, value=(255, 255, 255))
@@ -493,7 +477,7 @@ class ExpertEyeglassesRecommender:
                 axes[i, j].imshow(cv2.resize(img, (375, 250)))
 
         plt.show(block=block)
-        return img
+        return None
 
         
     def update_image(self, image):
