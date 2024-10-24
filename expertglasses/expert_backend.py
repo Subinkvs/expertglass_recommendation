@@ -437,49 +437,77 @@ class ExpertEyeglassesRecommender:
             return shape_dist, idx
 
     def plot_recommendations(self, strategy='factorized', block=True, return_links=False):
-        '''Plot or return top 6 eyeframe recommendations from the database by given strategy.'''
+        '''Plot or return top 6 eyeframe recommendations from local directories.
 
+            Args:
+                strategy (str, optional): Possible values are 'standard', 'factorized',
+                'factorized_plus', 'color_only', 'shape_only', and 'most_popular'.
+                Default is 'factorized'.
+                block (bool, optional): Block further command execution by matplotlib or not.
+                Default is True.
+                return_links (bool, optional): If True then return links to recommended images.
+                Default is False.
+
+            Returns:
+                None or list: Returns a list of image paths and model names if return_links is True.
+        '''
+
+        # Determine the directory based on gender from shapevec
         shapevec, _ = self.__get_vecs()
-
-        # Set directory based on gender from the shapevec
-        directory = 'abtest/man' if shapevec[-1] > 0 else 'abtest/woman'
+        base_directory = r'C:\Users\USER\Desktop\Backend\Live_Project\expertglasses\abtest'
         
-        if strategy == 'most_popular':
-            # Randomly choose 6 images from the specified directory
-            ims = np.random.choice([os.path.join(directory, f) for f in os.listdir(directory)], 6, replace=False)
+        # Define the directory based on the gender condition
+        if shapevec[-1] > 0:
+            directory = os.path.join(base_directory, 'man')  # For male
         else:
-            dist, idx = self.distances(strategy)
-            top6 = idx[dist.argsort()[-6:][::-1]]
-            ims = self.database.iloc[top6].image_link.tolist()
+            directory = os.path.join(base_directory, 'woman')  # For female
 
-      
+        # Check if the directory exists
+        if not os.path.exists(directory):
+            raise FileNotFoundError(f"The directory '{directory}' does not exist.")
+
+        # Collect all images from the directory
+        all_images = [os.path.join(directory, f) for f in os.listdir(directory) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+
+        # Ensure there are enough images
+        if len(all_images) < 6:
+            raise ValueError("Not enough images in the directory to select 6.")
+
+        # Randomly choose 6 images
+        ims = np.random.choice(all_images, 6, replace=False)
+
+        # Function to extract model name
+        def extract_model_name(image_path):
+            base_name = os.path.basename(image_path)  # Get base filename
+            model_name = base_name.replace('-front', '').replace('.jpg', '')  # Remove "-front"
+            return model_name
+
+        # If returning links, return links and model names
         if return_links:
-            # Assuming Nginx is serving the directory at 'http://your-server-ip/glassrec/'
-            base_url = 'http://172-31-32-118/glassrec/expertglass_recommendation/expertglasses/' 
-            # Construct the full URLs for each image
-            ims = [f"{base_url}{directory}/{os.path.basename(img)}" for img in ims]
+            return_data = [(os.path.abspath(img), extract_model_name(img)) for img in ims]
+            return return_data
 
         # Plot the images if not returning links
-        fig = plt.figure(figsize=(21, 14))
-        axes = fig.subplots(2, 3, sharex='col', sharey='row')
+        fig, axes = plt.subplots(2, 3, figsize=(21, 14), sharex='col', sharey='row')
 
         for i in range(2):
             for j in range(3):
                 axes[i, j].text(200, 300, str(i * 3 + j + 1), fontsize=18, ha='center')
 
-                img = io.imread(ims[i * 3 + j])  # Directly use the local path
+                # Load the image directly from the local file path
+                img = io.imread(ims[i * 3 + j])
 
-                # Adjust image shape for displaying
+                # Ensure all images have the same aspect ratio (pad if necessary)
                 if img.shape[1] / img.shape[0] != 1.5:
                     offset = int((2/3 - img.shape[0] / img.shape[1]) * img.shape[1] // 2)
                     img = cv2.copyMakeBorder(img, offset, offset, 0, 0, cv2.BORDER_CONSTANT, value=(255, 255, 255))
 
                 axes[i, j].imshow(cv2.resize(img, (375, 250)))
+                axes[i, j].axis('off')  # Hide axes for cleaner look
 
         plt.show(block=block)
         return None
 
-        
     def update_image(self, image):
         '''Update current image in the system by given image path.
 

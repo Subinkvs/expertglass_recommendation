@@ -189,22 +189,25 @@ def get_recommendations(request):
 
     try:
         if file:
-            img_path = save_uploaded_file(file)
+            img_path = save_uploaded_file(file)  # save_uploaded_file needs to be defined elsewhere
         elif file_url:
-            img_path = download_image_from_url(file_url)
-        
+            img_path = download_image_from_url(file_url)  # download_image_from_url also needs to be defined
+
+        # Instantiate the recommender class and get the recommendations
         ins = ExpertEyeglassesRecommender(img_path, lang=lang)
         
+        # Attempt to remove the uploaded image after processing (if necessary)
         try:
             os.remove(img_path)
         except OSError:
             pass
 
+        # Get the image links from the plot_recommendations function
         image_links = ins.plot_recommendations(return_links=True)
 
-        # Return the image links and names in the response
+        # Return the image links in the response (these should be local URLs or paths)
         return Response({
-            'recommended_images': image_links # This now contains the correct local paths
+            'recommended_images': image_links  # This will contain the local file paths
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
